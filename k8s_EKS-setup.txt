@@ -1,0 +1,193 @@
+step1:
+create 2  policies  with below name 
+1. create EKS-Admin-policy 
+ in JSON  
+
+{
+ "Version": "2012-10-17",
+ "Statement": [
+ {
+ "Effect": "Allow",
+ "Action": [
+ "eks:*"
+ ],
+ "Resource": "*"
+ }
+ ]
+}
+
+
+2. create CloudFormation-Admin-policy
+in JSON
+
+{
+ "Version": "2012-10-17",
+ "Statement": [
+ {
+ "Effect": "Allow",
+ "Action": [
+ "cloudformation:*"
+ ],
+ "Resource": "*"
+ }
+ ]
+}
+
+Create ec2 role
+finally, assign the following policies to your above role 
+
+AmazonEC2FullAccess
+IAMFullAccess
+AmazonVPCFullAccess
+CloudFormation-Admin-policy
+EKS-Admin-policy
+(where the last 2 policies are the ones you created above)
+
+Step2:
+  apt update 
+  apt upgrade
+  apt install python3  // Install Python : 
+  apt install python3-pip  //install pythonpip:
+  pip install --user awscli
+  export PATH=$PATH:/home/$(whoami)/.local/bin
+
+Step3: 
+ mkdir -p  ~/.aws/
+ vi ~/.aws/credentials  //copy paste the below 3 lines into a file by chnaging only region
+
+ [default]
+ region=ap-south-1    // the particular instance region
+ output=json
+
+
+Step 4: To install or upgrade eksctl on Linux
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+kubectl version --short --client  //get unable to find so follow the below steps to install 
+
+Step 5: Install kubelet and kubectl
+
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubelet=1.22.10-00 kubectl=1.22.10-00 
+ekctl vesrion //display the version 
+kubectl version --short --client 
+
+step 6 craete a yaml file and copy paste the below code-EKS_Cluster.yaml
+
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: Tanushree-Cluster
+  region: eu-west-2 //change the region
+
+vpc:
+  id: vpc-03ce661f5888a27c7  //vpc id of the required region
+  cidr: "172.31.0.0/16"
+  subnets:
+    public:
+      public-one:
+        id: subnet-001cfa37b715aaf7c //change subnet id  1 for the given vpc
+      public-two:
+        id: subnet-0a64f5a2a854748fe //change subnet id  2 for the given vpc
+      public-three:
+        id: subnet-09b1296f8c517bcd8 //change subnet id  3 for the given vpc
+    
+ 
+nodeGroups:
+  - name: ng-1
+    instanceType: t2.medium
+    desiredCapacity: 2
+    subnets:
+      - public-one
+      - public-two
+  - name: ng-2
+    instanceType: t2.medium
+    desiredCapacity: 1
+    subnets:
+      - public-three
+
+
+step 7 Create and setp cluster using EKS
+
+eksctl create cluster -f  EKS_Cluster.yaml (yamal file name )
+curl -o aws-iam-authenticator https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.2/2021-07-05/bin/linux/amd64/aws-iam-authenticator
+chmod +x ./aws-iam-authenticator
+mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$PATH:$HOME/bin
+
+kubectl get nodes  //below is the output
+
+NAME                                           STATUS   ROLES    AGE     VERSION
+ip-172-31-12-167.ap-south-1.compute.internal   Ready    <none>   5m21s   v1.24.10-eks-48e63af
+ip-172-31-37-215.ap-south-1.compute.internal   Ready    <none>   6m27s   v1.24.10-eks-48e63af
+ip-172-31-38-69.ap-south-1.compute.internal    Ready    <none>   6m28s   v1.24.10-eks-48e63af
+
+kubectl get pods -A //below is the output
+
+NAMESPACE     NAME                       READY   STATUS    RESTARTS   AGE
+kube-system   aws-node-29vwv             1/1     Running   0          6m53s
+kube-system   aws-node-fndcl             1/1     Running   0          8m
+kube-system   aws-node-vt2b8             1/1     Running   0          7m59s
+kube-system   coredns-74ccfbd98b-79rxv   1/1     Running   0          20m
+kube-system   coredns-74ccfbd98b-b4wtj   1/1     Running   0          20m
+kube-system   kube-proxy-4blrj           1/1     Running   0          6m53s
+kube-system   kube-proxy-gdctt           1/1     Running   0          7m59s
+kube-system   kube-proxy-r6slj           1/1     Running   0          8m
+
+
+
+eksctl delete cluster --name clustername //to delete cluster
+
+
+
+
+
+//Ignore as if
+
+Step 6:
+
+eksctl create cluster \
+    --name my-cluster \
+    --version 1.22 \
+    --without-nodegroup
+
+Step 7:
+vi new_eks.yaml
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: my-cluster
+  region: us-east-1
+
+managedNodeGroups:
+  - name: ng-1-workers
+    labels: { role: workers }
+    instanceType: t2.medium
+    desiredCapacity: 2
+    volumeSize: 80
+
+Step 8:
+eksctl create nodegroup --config-file=new_eks.yaml
+
+curl -o aws-iam-authenticator https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.2/2021-07-05/bin/linux/amd64/aws-iam-authenticator
+
+chmod +x ./aws-iam-authenticator
+
+mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$PATH:$HOME/bin
+
+aws-iam-authenticator init --config new_eks.yaml
+
+aws-iam-authenticator init --config new_eks.yaml 
+
+aws eks update-kubeconfig --region us-east-1 --name my-cluster
+
+
+
