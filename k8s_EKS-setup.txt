@@ -142,9 +142,18 @@ kube-system   kube-proxy-r6slj           1/1     Running   0          8m
 
 
 
-eksctl delete cluster --name clustername //to delete cluster
+#eksctl delete cluster --name clustername //to delete cluster
 
+IMPORTANT ...IF ERROR
+if the # kubectl get nodes throws the following error Unable to connect to the server: getting credentials: exec plugin is configured to use API version client.authentication.k8s.io/v1beta1, plugin returned version client.authentication.k8s.io/v1alpha1
 
+ check if the ~/.kube/config has v1beta1 in the APIVersion line as below API version client.authentication.k8s.io/v1beta1
+ then run the follwing command
+
+# aws eks update-kubeconfig --name satya-cluster-1
+	 this will update the config file wit
+
+kubectl get nodes
 
 
 
