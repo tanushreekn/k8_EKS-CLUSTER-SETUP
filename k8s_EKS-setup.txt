@@ -41,6 +41,11 @@ IAMFullAccess
 AmazonVPCFullAccess
 CloudFormation-Admin-policy
 EKS-Admin-policy
+AmazonEC2RoleforSSM
+AmazonSSMManagedInstanceCore
+AmazonSSMDirectoryServiceAccess
+AmazonSSMFullAccess
+AmazonSSMReadOnlyAccess
 (where the last 2 policies are the ones you created above)
 
 Step2:
@@ -49,6 +54,7 @@ Step2:
   apt install python3  // Install Python : 
   apt install python3-pip  //install pythonpip:
   pip install --user awscli
+  
   export PATH=$PATH:/home/$(whoami)/.local/bin
 
 Step3: 
